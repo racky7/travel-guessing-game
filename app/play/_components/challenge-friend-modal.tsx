@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { validateUsername } from "@/lib/user";
 import { Score } from "@/lib/destination";
-import { useRouter } from "next/navigation";
+import ImagePreview from "./image-preview";
+import Link from "next/link";
 
 type ChallengeFriendModalProps = {
   open: boolean;
@@ -36,7 +37,6 @@ export default function ChallengeFriendModal({
   const [formState, setFormState] = useState(INITIAL_FORM_STATE);
   const [generatedLink, setGeneratedLink] = useState("");
   const lastScoreRef = useRef<Score | null>(null);
-  const router = useRouter();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -112,11 +112,12 @@ export default function ChallengeFriendModal({
     }
   };
 
-  const handleWhatsAppShare = () => {
-    if (!generatedLink) return;
+  const getWhatsappShareLink = () => {
+    if (!generatedLink) return "";
     const message = `Hey, challenge me on this game! Click here: ${generatedLink}`;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    router.push(whatsappUrl);
+
+    return whatsappUrl;
   };
 
   return (
@@ -125,8 +126,16 @@ export default function ChallengeFriendModal({
         <DialogHeader>
           <DialogTitle className="text-center">Challenge a Friend</DialogTitle>
         </DialogHeader>
-        {username ? (
+        {username && true ? (
           <div className="space-y-4">
+            <div className="relative flex justify-center">
+              <div
+                className="pointer-events-none select-none"
+                style={{ width: "80%", height: "auto" }}
+              >
+                <ImagePreview username={username!} score={score} />
+              </div>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="generatedLink">Your Invite Link</Label>
               <Input
@@ -136,12 +145,11 @@ export default function ChallengeFriendModal({
                 className="bg-gray-100 truncate"
               />
             </div>
-            <Button
-              className="w-full bg-green-600 hover:bg-green-500"
-              onClick={handleWhatsAppShare}
-            >
-              Share on Whatsapp
-            </Button>
+            <Link href={getWhatsappShareLink()} target="_blank">
+              <Button className="w-full bg-green-600 hover:bg-green-500">
+                Share on Whatsapp
+              </Button>
+            </Link>
           </div>
         ) : (
           <form className="space-y-4" onSubmit={handleSubmit}>

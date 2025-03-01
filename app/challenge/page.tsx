@@ -4,18 +4,6 @@ import { ArrowRight, Trophy } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-export const metadata = {
-  openGraph: {
-    images: [
-      {
-        url: "https://travel-guessing-game.vercel.app/challenge?score=67c31880169b41718a32ec18",
-        width: 1200,
-        height: 630,
-      },
-    ],
-  },
-};
-
 export default async function ChallengePage({
   searchParams,
 }: {
