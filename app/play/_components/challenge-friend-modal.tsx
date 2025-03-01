@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { validateUsername } from "@/lib/user";
 import { Score } from "@/lib/destination";
+import html2canvas from "html2canvas-pro";
 import ImagePreview from "./image-preview";
 import Link from "next/link";
 
@@ -37,6 +38,8 @@ export default function ChallengeFriendModal({
   const [formState, setFormState] = useState(INITIAL_FORM_STATE);
   const [generatedLink, setGeneratedLink] = useState("");
   const lastScoreRef = useRef<Score | null>(null);
+
+  const imagePreviewRef = useRef<HTMLIFrameElement>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -112,11 +115,31 @@ export default function ChallengeFriendModal({
     }
   };
 
+  const donwloadImage = async () => {
+    if (imagePreviewRef.current) {
+      try {
+        const canvas = await html2canvas(imagePreviewRef.current);
+        console.log("canvas", canvas);
+        const image = canvas.toDataURL("image/png");
+        console.log("image", image);
+
+        // Create a temporary link element
+        const link = document.createElement("a");
+        link.href = image;
+        link.download = "downloaded-image.png"; // Set the filename
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (err) {
+        console.error("html2canvas error:", err);
+      }
+    }
+  };
+
   const getWhatsappShareLink = () => {
     if (!generatedLink) return "";
     const message = `Hey, challenge me on this game! Click here: ${generatedLink}`;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-
     return whatsappUrl;
   };
 
@@ -128,14 +151,22 @@ export default function ChallengeFriendModal({
         </DialogHeader>
         {username && true ? (
           <div className="space-y-4">
-            <div className="relative flex justify-center">
+            <div className="relative flex flex-col justify-center items-center gap-2">
               <div
                 className="pointer-events-none select-none"
                 style={{ width: "80%", height: "auto" }}
+                ref={imagePreviewRef}
               >
                 <ImagePreview username={username!} score={score} />
               </div>
+              <Button
+                className="mx-auto bg-purple-600 hover:bg-purple-500"
+                onClick={donwloadImage}
+              >
+                Download Image
+              </Button>
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="generatedLink">Your Invite Link</Label>
               <Input
@@ -145,6 +176,7 @@ export default function ChallengeFriendModal({
                 className="bg-gray-100 truncate"
               />
             </div>
+
             <Link href={getWhatsappShareLink()} target="_blank">
               <Button className="w-full bg-green-600 hover:bg-green-500">
                 Share on Whatsapp

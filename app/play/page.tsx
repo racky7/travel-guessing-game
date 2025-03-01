@@ -66,7 +66,7 @@ export default function GamePage() {
     <div className="max-w-3xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-white" />
+          <Trophy className="h-5 w-5 text-yellow-800" />
           <span className="font-semibold">
             Score: {score.correct} / {score.correct + score.incorrect}
           </span>
