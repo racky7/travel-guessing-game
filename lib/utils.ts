@@ -24,3 +24,13 @@ export function shuffleArray<T>(array: T[]) {
 
   return array;
 }
+
+export const playCorrectAudio = () => {
+  const audio = new Audio("/sounds/correct.wav");
+  audio.play().catch(() => console.error("Error playing sound"));
+};
+
+export const playIncorrectAudio = () => {
+  const audio = new Audio("/sounds/incorrect.wav");
+  audio.play().catch(() => console.error("Error playing sound:"));
+};

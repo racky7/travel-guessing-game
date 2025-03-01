@@ -36,6 +36,7 @@ export default function ChallengeFriendModal({
 }: ChallengeFriendModalProps) {
   const [username, setUsername] = useState<string | null>(null);
   const [formState, setFormState] = useState(INITIAL_FORM_STATE);
+  const [isLoading, setIsLoading] = useState(false);
   const [generatedLink, setGeneratedLink] = useState("");
   const lastScoreRef = useRef<Score | null>(null);
 
@@ -61,6 +62,7 @@ export default function ChallengeFriendModal({
     if (lastScoreRef.current === score) return; // Prevent duplicate requests
 
     try {
+      setIsLoading(true);
       const response = await fetch(`/api/users/${username}/score`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -76,6 +78,8 @@ export default function ChallengeFriendModal({
       lastScoreRef.current = score;
     } catch (error) {
       console.error("Error generating link:", error);
+    } finally {
+      setIsLoading(false);
     }
   }, [username, score, open]);
 
@@ -97,6 +101,7 @@ export default function ChallengeFriendModal({
     }
 
     try {
+      setIsLoading(true);
       const response = await fetch("/api/users", {
         method: "POST",
         body: JSON.stringify({ username }),
@@ -112,6 +117,8 @@ export default function ChallengeFriendModal({
       setUsername(data.username);
     } catch (error) {
       console.error("Error creating user:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -200,9 +207,10 @@ export default function ChallengeFriendModal({
             </div>
             <Button
               type="submit"
+              disabled={isLoading}
               className="w-full bg-green-600 hover:bg-green-500"
             >
-              Generate Invite Link
+              {isLoading ? "Please wait..." : "Generate Invite Link"}
             </Button>
           </form>
         )}

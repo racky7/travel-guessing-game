@@ -2,7 +2,12 @@
 
 import { Button } from "@/components/ui/button";
 import { Destination, Score } from "@/lib/destination";
-import { cn, getRandomIndex } from "@/lib/utils";
+import {
+  cn,
+  getRandomIndex,
+  playCorrectAudio,
+  playIncorrectAudio,
+} from "@/lib/utils";
 import { RefreshCw, Share2, Trophy } from "lucide-react";
 import { useEffect, useState } from "react";
 import confetti from "canvas-confetti";
@@ -43,7 +48,14 @@ export default function GamePage() {
     setSelectedAnswerIndex(index);
     if (destination?.choices[index].correct) {
       setScore((prev) => ({ ...prev, correct: prev.correct + 1 }));
+      playCorrectAudio();
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+      });
     } else {
+      playIncorrectAudio();
       setScore((prev) => ({ ...prev, incorrect: prev.incorrect + 1 }));
     }
   };
@@ -51,16 +63,6 @@ export default function GamePage() {
   useEffect(() => {
     fetchDestination();
   }, []);
-
-  useEffect(() => {
-    if (isCorrect) {
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-      });
-    }
-  }, [isCorrect]);
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -77,36 +79,50 @@ export default function GamePage() {
           <h2 className="text-2xl font-bold mb-4">Where am I?</h2>
           <div className="bg-white/20 p-6 rounded-lg mb-4">
             <ul className="list-disc pl-5 space-y-2">
-              {destination?.clues.map((clue, i) => (
-                <li key={`clue-${i}`} className="text-xl italic">
-                  {clue}
-                </li>
-              ))}
+              {destination
+                ? destination.clues.map((clue, i) => (
+                    <li key={`clue-${i}`} className="text-xl italic">
+                      {clue}
+                    </li>
+                  ))
+                : "Please wait..."}
             </ul>
           </div>
         </div>
         <div className="mb-8">
           <h3 className="text-xl font-bold mb-4">Select your answer:</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {destination?.choices.map((choice, idx) => (
-              <Button
-                key={`choice-${idx}`}
-                size="lg"
-                className={cn(
-                  "h-15 text-lg w-full transition-colors duration-200 cursor-pointer",
-                  isSelected && selectedAnswerIndex === idx && !choice.correct
-                    ? "bg-red-500 hover:bg-red-400"
-                    : "bg-white/30 hover:bg-white/40",
-                  isSelected && choice.correct
-                    ? "bg-green-500 hover:bg-green-400"
-                    : null,
-                  isSelected ? "pointer-events-none" : null
-                )}
-                onClick={() => handleAnswerSelect(idx)}
-              >
-                {choice.name}
-              </Button>
-            ))}
+            {destination
+              ? destination.choices.map((choice, idx) => (
+                  <Button
+                    key={`choice-${idx}`}
+                    size="lg"
+                    className={cn(
+                      "h-15 text-lg w-full transition-colors duration-200 cursor-pointer",
+                      isSelected &&
+                        selectedAnswerIndex === idx &&
+                        !choice.correct
+                        ? "bg-red-500 hover:bg-red-400"
+                        : "bg-white/30 hover:bg-white/40",
+                      isSelected && choice.correct
+                        ? "bg-green-500 hover:bg-green-400"
+                        : null,
+                      isSelected ? "pointer-events-none" : null
+                    )}
+                    onClick={() => handleAnswerSelect(idx)}
+                  >
+                    {choice.name}
+                  </Button>
+                ))
+              : Array.from({ length: 4 }, (_, idx) => (
+                  <Button
+                    key={`skeleton-${idx}`}
+                    size="lg"
+                    className="h-15 text-lg w-full transition-colors duration-200 cursor-pointer bg-white/30 hover:bg-white/40"
+                  >
+                    ...
+                  </Button>
+                ))}
           </div>
         </div>
         {isSelected ? (
