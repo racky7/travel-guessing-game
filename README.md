@@ -49,12 +49,20 @@ cd travel-guessing-game
 npm install
 ```
 
-3. Run the development server:
+3. Configure environment variables
+
+```bash
+cp .env.example .env
+```
+You need to set up your environment variable for MongoDB
+
+
+4. Run the development server:
 ```bash
 npm run dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 
 
