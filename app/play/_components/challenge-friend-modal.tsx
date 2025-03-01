@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,13 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { validateUsername } from "@/lib/user";
 import { Score } from "@/lib/destination";
+import { useRouter } from "next/navigation";
 
 type ChallengeFriendModalProps = {
-  username: string | null;
   open: boolean;
   setOpen: (value: boolean) => void;
   score: Score;
-  onSubmit: (username: string) => void;
 };
 
 const INITIAL_FORM_STATE = {
@@ -29,14 +28,15 @@ const INITIAL_FORM_STATE = {
 };
 
 export default function ChallengeFriendModal({
-  username,
   open,
   setOpen,
   score,
-  onSubmit,
 }: ChallengeFriendModalProps) {
+  const [username, setUsername] = useState<string | null>(null);
   const [formState, setFormState] = useState(INITIAL_FORM_STATE);
   const [generatedLink, setGeneratedLink] = useState("");
+  const lastScoreRef = useRef<Score | null>(null);
+  const router = useRouter();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -53,15 +53,32 @@ export default function ChallengeFriendModal({
     }));
   };
 
-  const generateLink = async (username: string) => {
-    const response = await fetch(`/api/users/${username}/score`, {
-      method: "POST",
-      body: JSON.stringify({ score }),
-    });
-    const data = await response.json();
-    const shareLink = `${window.location.origin}/challenge/${username}/${data.id}`;
-    setGeneratedLink(shareLink);
-  };
+  const generateLink = useCallback(async () => {
+    if (!username || !open) return; // Ensure modal is open before triggering
+    if (lastScoreRef.current === score) return; // Prevent duplicate requests
+
+    try {
+      const response = await fetch(`/api/users/${username}/score`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ score }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate invite link");
+      }
+
+      const data = await response.json();
+      setGeneratedLink(`${window.location.origin}/challenge?score=${data.id}`);
+      lastScoreRef.current = score;
+    } catch (error) {
+      console.error("Error generating link:", error);
+    }
+  }, [username, score, open]);
+
+  useEffect(() => {
+    generateLink();
+  }, [open, score, generateLink]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -76,15 +93,31 @@ export default function ChallengeFriendModal({
       return;
     }
 
-    onSubmit?.(username);
+    try {
+      const response = await fetch("/api/users", {
+        method: "POST",
+        body: JSON.stringify({ username }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setFormState((prev) => ({
+          ...prev,
+          errors: { ...prev.errors, username: data?.error ?? "" },
+        }));
+      }
+      setUsername(data.username);
+    } catch (error) {
+      console.error("Error creating user:", error);
+    }
   };
 
-  useEffect(() => {
-    if (open && username) {
-      generateLink(username);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, username]);
+  const handleWhatsAppShare = () => {
+    if (!generatedLink) return;
+    const message = `Hey, challenge me on this game! Click here: ${generatedLink}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    router.push(whatsappUrl);
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -103,7 +136,10 @@ export default function ChallengeFriendModal({
                 className="bg-gray-100 truncate"
               />
             </div>
-            <Button className="w-full bg-green-600 hover:bg-green-500">
+            <Button
+              className="w-full bg-green-600 hover:bg-green-500"
+              onClick={handleWhatsAppShare}
+            >
               Share on Whatsapp
             </Button>
           </div>

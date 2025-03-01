@@ -8,7 +8,7 @@ export default function Home() {
       <main className="container mx-auto px-4 pb-12">
         <div className="max-w-2xl mx-auto bg-white/10 backdrop-blur-md rounded-xl p-8 shadow-lg">
           <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold mb-4">Hello, Traveler!</h2>
+            <h2 className="text-4xl font-bold mb-4">Hello, Travler!</h2>
             <p className="text-xl">
               Test your travel knowledge with cryptic clues about famous
               destinations around the world.

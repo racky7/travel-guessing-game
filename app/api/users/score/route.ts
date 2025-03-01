@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
+  console.log("this called");
   try {
     const { searchParams } = new URL(request.url);
 

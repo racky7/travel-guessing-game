@@ -18,7 +18,10 @@ export async function POST(request: Request) {
 
     if (existingUser) {
       // If user exists, just return success
-      return NextResponse.json(existingUser);
+      return NextResponse.json(
+        { error: "username not available" },
+        { status: 409 }
+      );
     }
 
     // Create new user
