@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,37 +8,15 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { validateUsername } from "@/lib/user";
+import { Score } from "@/lib/destination";
 
 type ChallengeFriendModalProps = {
+  username: string | null;
   open: boolean;
   setOpen: (value: boolean) => void;
-};
-
-const validateUsername = (
-  username: string
-): { isValid: boolean; error: string } => {
-  if (!username.trim()) {
-    return { isValid: false, error: "Username is required" };
-  }
-
-  // Check length (3-20 characters)
-  if (username.length < 3 || username.length > 20) {
-    return {
-      isValid: false,
-      error: "Username must be between 3 and 20 characters",
-    };
-  }
-
-  // Only allow letters, numbers, underscores, and hyphens
-  const validUsernameRegex = /^[a-zA-Z0-9_-]+$/;
-  if (!validUsernameRegex.test(username)) {
-    return {
-      isValid: false,
-      error: "Illegal characters not allowed",
-    };
-  }
-
-  return { isValid: true, error: "" };
+  score: Score;
+  onSubmit: (username: string) => void;
 };
 
 const INITIAL_FORM_STATE = {
@@ -51,8 +29,11 @@ const INITIAL_FORM_STATE = {
 };
 
 export default function ChallengeFriendModal({
+  username,
   open,
   setOpen,
+  score,
+  onSubmit,
 }: ChallengeFriendModalProps) {
   const [formState, setFormState] = useState(INITIAL_FORM_STATE);
   const [generatedLink, setGeneratedLink] = useState("");
@@ -72,7 +53,17 @@ export default function ChallengeFriendModal({
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const generateLink = async (username: string) => {
+    const response = await fetch(`/api/users/${username}/score`, {
+      method: "POST",
+      body: JSON.stringify({ score }),
+    });
+    const data = await response.json();
+    const shareLink = `${window.location.origin}/challenge/${username}/${data.id}`;
+    setGeneratedLink(shareLink);
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const { username } = formState.values;
     const validation = validateUsername(username);
@@ -85,9 +76,15 @@ export default function ChallengeFriendModal({
       return;
     }
 
-    const shareLink = `${window.location.origin}/challenge/${username}`;
-    setGeneratedLink(shareLink);
+    onSubmit?.(username);
   };
+
+  useEffect(() => {
+    if (open && username) {
+      generateLink(username);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, username]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -95,7 +92,7 @@ export default function ChallengeFriendModal({
         <DialogHeader>
           <DialogTitle className="text-center">Challenge a Friend</DialogTitle>
         </DialogHeader>
-        {generatedLink ? (
+        {username ? (
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="generatedLink">Your Invite Link</Label>

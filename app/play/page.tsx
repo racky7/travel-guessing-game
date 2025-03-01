@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Destination } from "@/lib/destination";
+import { Destination, Score } from "@/lib/destination";
 import { cn, getRandomIndex } from "@/lib/utils";
 import { RefreshCw, Share2, Trophy } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -9,7 +9,7 @@ import confetti from "canvas-confetti";
 import ChallengeFriendModal from "./_components/challenge-friend-modal";
 
 export default function GamePage() {
-  const [score, setScore] = useState({
+  const [score, setScore] = useState<Score>({
     correct: 0,
     incorrect: 0,
   });
@@ -18,6 +18,7 @@ export default function GamePage() {
     null
   );
   const [openChallengeModal, setOpenChallengeModal] = useState(false);
+  const [username, setUsername] = useState<string | null>(null);
 
   const isSelected = selectedAnswerIndex !== null;
   const correctChoice = destination?.choices.find((choice) => choice.correct);
@@ -46,6 +47,15 @@ export default function GamePage() {
     } else {
       setScore((prev) => ({ ...prev, incorrect: prev.incorrect + 1 }));
     }
+  };
+
+  const handleUserCreate = async (username: string) => {
+    const response = await fetch("/api/users", {
+      method: "POST",
+      body: JSON.stringify({ username }),
+    });
+    const data = await response.json();
+    setUsername(data.username);
   };
 
   useEffect(() => {
@@ -165,6 +175,9 @@ export default function GamePage() {
       <ChallengeFriendModal
         open={openChallengeModal}
         setOpen={setOpenChallengeModal}
+        score={score}
+        onSubmit={handleUserCreate}
+        username={username}
       />
     </div>
   );
